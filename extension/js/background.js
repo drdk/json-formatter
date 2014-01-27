@@ -44,9 +44,13 @@
       TYPE_OBJECT = 3,
       TYPE_ARRAY  = 4,
       TYPE_BOOL   = 5,
-      TYPE_NULL   = 6
+      TYPE_NULL   = 6,
+	  drUrnRegExp = /(.+\/(mu|muonline|api)\/|http:\/\/localhost(:\d+|)\/)/,
+	  drUrnTypeRegExp = /urn:dr:mu:(.+):/
     ;
 
+	var senderUrl = "";
+	
   // Utility functions
     function removeComments (str) {
       str = ('__' + str + '__').split('');
@@ -269,8 +273,18 @@
                 innerStringA.innerText = escapedString ;
                 innerStringEl.appendChild(innerStringA) ;
               }
+			  else if (value[0] === 'u' && value.substring(0, 10) === 'urn:dr:mu:' && drUrnRegExp.test(senderUrl)) {
+				var innerStringA = document.createElement('A') ;
+				var urnType = drUrnTypeRegExp.exec(value)[1];
+				if (urnType == "manifest") {
+				   urnType = "internalmanifest";
+				}
+                innerStringA.href = drUrnRegExp.exec(senderUrl)[0]+ urnType + "/" + value ;
+                innerStringA.innerText = escapedString ;
+                innerStringEl.appendChild(innerStringA) ;
+			  }	  
               else {
-                innerStringEl.innerText = escapedString ;
+                innerStringEl.innerText = escapedString;
               }
               valueElement = templates.t_string.cloneNode(false) ;
               valueElement.appendChild(templates.t_dblqText.cloneNode(false)) ;
@@ -397,6 +411,8 @@
   // Listen for requests from content pages wanting to set up a port
     chrome.extension.onConnect.addListener(function(port) {
 
+	  senderUrl = port.sender.url;
+	  
       if (port.name !== 'jf') {
         console.log('JSON Formatter error - unknown port name '+port.name, port) ;
         return ;
