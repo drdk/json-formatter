@@ -270,7 +270,8 @@
   
   document.addEventListener("DOMContentLoaded", ready, false);
 
-  var lastKvovIdGiven = 0 ;
+  var lastKvovIdGiven = 0 ,
+      lastDateIdGiven = 0;
   function collapse(elements) {
     // console.log('elements', elements) ;
 
@@ -329,15 +330,18 @@
     if (ev.which === 1) {
       var elem = ev.target ;
      
-      if (elem.parentNode.className === 's' && elem.parentNode.childNodes.length == 3) { 
+      if (elem.parentNode.className === 's' && elem.parentNode.parentNode.id === "") {
+           
          // try to append local time...
           var tryDate = new Date(elem.innerText);
           if (!isNaN( tryDate.getTime() ) ) {  
+             elem.parentNode.parentNode.id = "ldate" + (++lastDateIdGiven);
              var dateString = tryDate.toLocaleString();
-             var localDateElm = document.createElement("span");
-             localDateElm.innerText = " (" + dateString + ")";
-             localDateElm.setAttribute("style","color: #BC4B00; font-style: italic;");
-             elem.parentNode.appendChild(localDateElm);
+             
+              jfStyleEl.insertAdjacentHTML(
+              'beforeend',
+              '\n#'+elem.parentNode.parentNode.id+':after{color: #aaa; content:" // '+dateString+'"}'
+            ) ;
           }          
       }
       else if (elem.className === 'e') {
