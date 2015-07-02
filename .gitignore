@@ -1,2 +1,5 @@
 compass_app_log.txt
 key.pem
+/dist/
+/node_modules/
+/.sass-cache/
