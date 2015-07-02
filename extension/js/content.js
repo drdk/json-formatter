@@ -328,8 +328,19 @@
 
     if (ev.which === 1) {
       var elem = ev.target ;
-      
-      if (elem.className === 'e') {
+     
+      if (elem.parentNode.className === 's' && elem.parentNode.childNodes.length == 3) { 
+         // try to append local time...
+          var tryDate = new Date(elem.innerText);
+          if (!isNaN( tryDate.getTime() ) ) {  
+             var dateString = tryDate.toLocaleString();
+             var localDateElm = document.createElement("span");
+             localDateElm.innerText = " (" + dateString + ")";
+             localDateElm.setAttribute("style","color: #BC4B00; font-style: italic;");
+             elem.parentNode.appendChild(localDateElm);
+          }          
+      }
+      else if (elem.className === 'e') {
         // It's a click on an expander.
 
         ev.preventDefault() ;
