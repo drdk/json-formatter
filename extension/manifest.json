@@ -1,6 +1,6 @@
 {
   "name": "JSON Formatter w. DR urn support",
-  "version": "0.3",
+  "version": "0.4",
   "manifest_version": 2,
   "description": "Makes JSON easy to read. Open source.",
   "homepage_url": "https://github.com/drdk/json-formatter",
