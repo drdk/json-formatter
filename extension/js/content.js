@@ -308,6 +308,89 @@
         }
     }
   }
+  
+  function tryParseDate(element) {
+          if (element != null && element.className === 's' && element.parentNode.id === "") {
+           var target = element.childNodes[1].innerText;
+           if (/^(\d){4}-(\d){2}-(\d){2}/.test(target)) {
+            // try to append local time...
+            var tryDate = new Date(target);
+            if (!isNaN( tryDate.getTime() ) ) {  
+               element.parentNode.id = "ldate" + (++lastDateIdGiven);
+               var dateString = tryDate.toLocaleString();             
+                jfStyleEl.insertAdjacentHTML(
+                'beforeend',
+                '\n#' +element.parentNode.id+':after{color: #aaa; content:" // '+dateString+'"}'
+              ) ;
+              return true;
+            }          
+          }
+      }
+      return false;
+  }
+
+  function decrypt(encryptedString) {
+				var versionHeader = encryptedString.substring(0, 2);
+				var version = parseInt(versionHeader, 16);
+
+				if (version != 1) {
+          throw "Algorithm not compatible";
+				}
+
+				var payloadHeader = encryptedString.substring(2, 10);
+				var payloadLength = parseInt(payloadHeader, 16);
+
+				var payloadHex = encryptedString.substring(10, 10 + payloadLength);
+				var initialVectorHex = encryptedString.substring(10 + payloadLength);
+
+				var cipher = generateCipher(initialVectorHex);
+				var initialVector = forge.util.hexToBytes(initialVectorHex);
+				var encryptedDataBytes = forge.util.hexToBytes(payloadHex);
+				var encryptedDataBuffer = forge.util.createBuffer(encryptedDataBytes);
+
+				var decipher = forge.cipher.createDecipher('AES-CBC', cipher);
+				decipher.start({ iv: initialVector });
+				decipher.update(encryptedDataBuffer);
+				decipher.finish();
+				return decipher.output.data;
+  }
+
+  function generateCipher(seed) {
+				var secret = getCookie("secret");
+				var md = forge.md.sha256.create();
+				md.update(seed + ":" + secret);
+				var cipher = md.digest();
+				return cipher;
+  }
+
+  function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires=" + d.toUTCString();
+    document.cookie = cname + "=" + cvalue + "; " + expires + "; path=/";
+  }
+
+  function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') c = c.substring(1);
+      if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+    }
+    return "";
+  }
+
+  function checkCookie() {
+    var secret = getCookie("secret");
+    if (secret == "") {
+      secret = prompt("Please enter your secret:", "");
+      if (secret != "" && secret != null) {
+        setCookie("secret", secret, 365);
+      }
+    }
+  }
+  
   function expand(elements) {
     for (var i = elements.length - 1; i >= 0; i--)
       elements[i].classList.remove('collapsed') ;
@@ -329,20 +412,28 @@
 
     if (ev.which === 1) {
       var elem = ev.target ;
-     
-      if (elem.parentNode.className === 's' && elem.parentNode.parentNode.id === "") {
-           
-         // try to append local time...
-          var tryDate = new Date(elem.innerText);
-          if (!isNaN( tryDate.getTime() ) ) {  
-             elem.parentNode.parentNode.id = "ldate" + (++lastDateIdGiven);
-             var dateString = tryDate.toLocaleString();
-             
-              jfStyleEl.insertAdjacentHTML(
-              'beforeend',
-              '\n#'+elem.parentNode.parentNode.id+':after{color: #aaa; content:" // '+dateString+'"}'
-            ) ;
-          }          
+      if(tryParseDate(elem.parentNode))
+      {
+        // we have found an s element with an date time...
+      }
+      if(elem.className === 'k') {
+        var key = elem.innerText;
+        if(key[0]==='E' && key.substring(0,9) === "Encrypted") {
+          checkCookie();
+          var encryptedElem = elem.nextElementSibling.childNodes[1];
+          var encryptedText = encryptedElem.innerText;
+          var targetKey = key.substring(9, key.length);
+          var rootSiblings = elem.parentElement.parentElement.childNodes;
+          
+          for (var i = 0; i < rootSiblings.length; i++)    
+          { 
+            if(rootSiblings[i].childNodes[1].innerText === targetKey) {
+                elem.parentElement.parentElement.removeChild(rootSiblings[i]);
+            }
+          }
+          elem.innerText = targetKey;
+          encryptedElem.innerText = decrypt(encryptedText);          
+        }        
       }
       else if (elem.className === 'e') {
         // It's a click on an expander.
