@@ -3,7 +3,7 @@ JSON Formatter w. DR urns support
 
 Chrome extension for printing JSON and JSONP nicely when you visit it 'directly' in a browser tab.
 
-Use this [key](http://github01.net.dr.dk/media-universe/powertools/blob/master/dr-powertools/key.pem) to sign extension.
+Use this [key](http://github.com/drdk/powertools/blob/master/dr-powertools/key.pem) to sign extension.
 
 Features
 --------
